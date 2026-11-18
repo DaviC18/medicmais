@@ -1,0 +1,5 @@
+# TODO(conteudo): domínio final (placeholder também em index.html e sitemap.xml)
+User-agent: *
+Allow: /
+
+Sitemap: https://odonto.medicmaisbarramansa.com.br/sitemap.xml

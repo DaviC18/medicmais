@@ -1,0 +1,173 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Fontes self-hosted (ver docs/DECISIONS.md) */
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/fraunces/opsz.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ------------------------------------------------------------------
+ * Tokens de marca (fonte: docs/SPEC.md §2; vermelho amostrado do logo)
+ * Uso: bg-brand, text-ink, bg-surface, bg-surface-2, text-ink-muted ...
+ * ------------------------------------------------------------------ */
+@theme {
+  /* Cores */
+  --color-brand: #dc1e2a; /* vermelho do coração (logo) — CTAs e detalhes */
+  --color-brand-strong: #b5141f; /* hover/active do brand */
+  --color-brand-soft: #fbe8e9; /* tint para fundos de destaque pontuais */
+  --color-brand-ink: #14213d; /* navy — títulos e texto forte (nome do SPEC) */
+  --color-ink: #14213d; /* alias curto de brand-ink */
+  --color-ink-muted: #5b6475; /* texto secundário (SPEC: --color-muted; renomeado p/ não colidir com shadcn) */
+  --color-brand-gray: #5e5e5e; /* cinza do logo — uso decorativo apenas */
+  --color-surface: #fbf8f4; /* fundo base (off-white quente) */
+  --color-surface-2: #f2ece4; /* seções alternadas */
+  --color-surface-raised: #fffdfa; /* cards sobre surface */
+  --color-line: #e6ded3; /* bordas e divisórias */
+  --color-whatsapp: #25d366; /* botão flutuante */
+  --color-whatsapp-ink: #0a2e18; /* ícone/texto sobre whatsapp (branco não passa AA) */
+
+  /* Tipografia */
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, "Times New Roman", serif;
+
+  /* Escala fluida 360px → 1440px */
+  --text-display: clamp(2.5rem, 1.75rem + 3.333vw, 4.75rem); /* 40 → 76 */
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.028em;
+  --text-title: clamp(2rem, 1.583rem + 1.852vw, 3.25rem); /* 32 → 52 (h2) */
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.02em;
+  --text-subtitle: clamp(1.375rem, 1.25rem + 0.556vw, 1.75rem); /* 22 → 28 (h3) */
+  --text-subtitle--line-height: 1.25;
+  --text-subtitle--letter-spacing: -0.01em;
+  --text-lead: clamp(1.125rem, 1.042rem + 0.37vw, 1.375rem); /* 18 → 22 */
+  --text-lead--line-height: 1.55;
+  --text-body: clamp(1rem, 0.979rem + 0.093vw, 1.0625rem); /* 16 → 17 */
+  --text-body--line-height: 1.65;
+  --text-small: 0.875rem; /* 14 */
+  --text-small--line-height: 1.5;
+  --text-eyebrow: 0.8125rem; /* 13, uppercase + tracking */
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--letter-spacing: 0.12em;
+
+  /* Espaçamento de layout */
+  --spacing-section: clamp(4rem, 2.667rem + 5.926vw, 8rem); /* 64 → 128: py-section */
+  --spacing-gutter: clamp(1.25rem, 0.833rem + 1.852vw, 2.5rem); /* 20 → 40: px-gutter */
+  --spacing-header: 4.5rem; /* altura do header fixo: h-header, scroll-mt-header */
+
+  /* Larguras */
+  --container-page: 76rem; /* 1216px: max-w-page */
+  --container-reading: 40rem; /* ~65ch de corpo: max-w-reading */
+
+  /* Raios (SPEC: --radius-xl 1.5rem para cards) */
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
+
+  /* Sombras suaves, tingidas de navy */
+  --shadow-soft: 0 1px 2px rgb(20 33 61 / 0.04), 0 4px 16px -4px rgb(20 33 61 / 0.08);
+  --shadow-card: 0 1px 2px rgb(20 33 61 / 0.05), 0 12px 32px -12px rgb(20 33 61 / 0.14);
+  --shadow-lift: 0 2px 4px rgb(20 33 61 / 0.06), 0 24px 48px -16px rgb(20 33 61 / 0.22);
+
+  /* Easing (transições CSS/Motion; GSAP usa power3.out/expo.out) */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ------------------------------------------------------------------
+ * Mapeamento para as variáveis do shadcn/ui
+ * ------------------------------------------------------------------ */
+@theme inline {
+  --font-heading: var(--font-display);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+}
+
+:root {
+  --radius: 0.875rem;
+  --background: var(--color-surface);
+  --foreground: var(--color-ink);
+  --card: var(--color-surface-raised);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface-raised);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-surface-2);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-surface-2);
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-surface-2);
+  --accent-foreground: var(--color-ink);
+  --destructive: #b42318;
+  --border: var(--color-line);
+  --input: var(--color-line);
+  --ring: var(--color-brand);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--spacing-header);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-body text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: 500;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-soft);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}

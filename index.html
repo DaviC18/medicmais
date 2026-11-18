@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      SEO/meta/JSON-LD/GTM: 04-qa-launch.
+      TODO(conteudo): domínio final. O placeholder abaixo aparece também em
+      public/robots.txt e public/sitemap.xml. Para trocar em todos:
+        grep -rl "odonto.medicmaisbarramansa.com.br" index.html public
+    -->
+    <title>Dentista em Barra Mansa | Odontologia MedicMais – Ano Bom</title>
+    <meta
+      name="description"
+      content="Dentista no Ano Bom, em Barra Mansa (RJ): atendimento odontológico humanizado para você e sua família na MedicMais. Agende sua avaliação pelo WhatsApp."
+    />
+    <link rel="canonical" href="https://odonto.medicmaisbarramansa.com.br/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#FBF8F4" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="MedicMais Barra Mansa" />
+    <meta property="og:title" content="Dentista em Barra Mansa | Odontologia MedicMais – Ano Bom" />
+    <meta
+      property="og:description"
+      content="Atendimento odontológico humanizado para você e sua família, no Ano Bom, em Barra Mansa (RJ). Agende sua avaliação pelo WhatsApp."
+    />
+    <meta property="og:url" content="https://odonto.medicmaisbarramansa.com.br/" />
+    <meta property="og:image" content="https://odonto.medicmaisbarramansa.com.br/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Logo da MedicMais Barra Mansa com o slogan: Nós cuidamos de você e da sua família"
+    />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Dentista em Barra Mansa | Odontologia MedicMais – Ano Bom" />
+    <meta
+      name="twitter:description"
+      content="Atendimento odontológico humanizado para você e sua família, no Ano Bom, em Barra Mansa (RJ). Agende pelo WhatsApp."
+    />
+    <meta name="twitter:image" content="https://odonto.medicmaisbarramansa.com.br/og-image.jpg" />
+    <meta
+      name="twitter:image:alt"
+      content="Logo da MedicMais Barra Mansa com o slogan: Nós cuidamos de você e da sua família"
+    />
+
+    <!--
+      JSON-LD estático espelhando src/data/clinica.ts (ver docs/HANDOFF.md: pedido de
+      plugin Vite para gerar a partir dos dados). Sem openingHours e sem geo enquanto
+      clinica.horarios / clinica.endereco.geo estiverem vazios (TODO(conteudo)).
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dentist",
+        "@id": "https://odonto.medicmaisbarramansa.com.br/#dentist",
+        "name": "MedicMais Barra Mansa – Odontologia",
+        "alternateName": "MedicMais Barra Mansa",
+        "slogan": "Nós cuidamos de você e da sua família",
+        "description": "Atendimento odontológico humanizado para você e sua família no Ano Bom, em Barra Mansa (RJ): clínico geral, prevenção e diagnóstico, próteses e implantes dentários após avaliação.",
+        "url": "https://odonto.medicmaisbarramansa.com.br/",
+        "image": "https://odonto.medicmaisbarramansa.com.br/og-image.jpg",
+        "logo": "https://odonto.medicmaisbarramansa.com.br/brand/medicmais-logo-512.png",
+        "telephone": "+55-24-3323-9990",
+        "taxID": "43.812.444/0001-34",
+        "medicalSpecialty": "https://schema.org/Dentistry",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Praça das Nações Unidas, 60 - Ano Bom",
+          "addressLocality": "Barra Mansa",
+          "addressRegion": "RJ",
+          "postalCode": "27323-360",
+          "addressCountry": "BR"
+        },
+        "hasMap": "https://www.google.com/maps/search/?api=1&query=Pra%C3%A7a%20das%20Na%C3%A7%C3%B5es%20Unidas%2C%2060%20-%20Ano%20Bom%2C%20Barra%20Mansa%20-%20RJ%2C%2027323-360",
+        "areaServed": { "@type": "City", "name": "Barra Mansa" },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer service",
+          "telephone": "+55-24-99935-9784",
+          "availableLanguage": "pt-BR"
+        },
+        "employee": {
+          "@type": "Person",
+          "name": "Dra. Barbara Daniela Domingueti Dias",
+          "jobTitle": "Cirurgiã-dentista · Responsável técnica",
+          "identifier": {
+            "@type": "PropertyValue",
+            "propertyID": "CRO-RJ",
+            "value": "42247"
+          }
+        },
+        "sameAs": ["https://www.instagram.com/medicmaisbarramansa/"]
+      }
+    </script>
+
+    <!--
+      Google Tag Manager, condicionado a VITE_GTM_ID (ex.: GTM-5CJDZL8K, citado no SPEC).
+      Vite substitui %VITE_GTM_ID% no build; sem a variável o texto fica literal,
+      o regex falha e nenhum request é feito. O dataLayer existe sempre, então
+      trackWhatsApp() funciona (e é testável) mesmo sem GTM.
+    -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      (function (w, d, id) {
+        if (!/^GTM-[A-Z0-9]+$/.test(id)) return;
+        w.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
+        var s = d.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtm.js?id=" + id;
+        d.head.appendChild(s);
+      })(window, document, "%VITE_GTM_ID%");
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
