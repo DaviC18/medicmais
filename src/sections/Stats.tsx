@@ -1,12 +1,11 @@
 import { useRef } from 'react'
 import { clinica } from '@/data/clinica'
-import { pendingCopy } from '@/sections/_pending-copy'
 import { useReveal } from '@/hooks/useReveal'
 import { Section } from '@/components/layout/Section'
 import { Container } from '@/components/layout/Container'
 
 const { numeros } = clinica
-const copy = pendingCopy.secoes.numeros
+const copy = clinica.ui.secoes.numeros
 const fmt = new Intl.NumberFormat('pt-BR')
 
 /** #numeros — só com dado real (clinica.numeros). Vazio = não renderiza. */

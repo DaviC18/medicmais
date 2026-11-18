@@ -57,54 +57,11 @@
     />
 
     <!--
-      JSON-LD estático espelhando src/data/clinica.ts (ver docs/HANDOFF.md: pedido de
-      plugin Vite para gerar a partir dos dados). Sem openingHours e sem geo enquanto
-      clinica.horarios / clinica.endereco.geo estiverem vazios (TODO(conteudo)).
+      JSON-LD (schema.org/Dentist) gerado no build e no dev a partir de src/data/clinica.ts
+      pelo plugin `clinicaHtml` (vite.config.ts → src/data/jsonld.ts). Não remova o marcador:
+      sem ele o build falha. geo entra quando clinica.endereco.geo existir (TODO(conteudo)).
     -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Dentist",
-        "@id": "https://odonto.medicmaisbarramansa.com.br/#dentist",
-        "name": "MedicMais Barra Mansa – Odontologia",
-        "alternateName": "MedicMais Barra Mansa",
-        "slogan": "Nós cuidamos de você e da sua família",
-        "description": "Atendimento odontológico humanizado para você e sua família no Ano Bom, em Barra Mansa (RJ): clínico geral, prevenção e diagnóstico, próteses e implantes dentários após avaliação.",
-        "url": "https://odonto.medicmaisbarramansa.com.br/",
-        "image": "https://odonto.medicmaisbarramansa.com.br/og-image.jpg",
-        "logo": "https://odonto.medicmaisbarramansa.com.br/brand/medicmais-logo-512.png",
-        "telephone": "+55-24-3323-9990",
-        "taxID": "43.812.444/0001-34",
-        "medicalSpecialty": "https://schema.org/Dentistry",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Praça das Nações Unidas, 60 - Ano Bom",
-          "addressLocality": "Barra Mansa",
-          "addressRegion": "RJ",
-          "postalCode": "27323-360",
-          "addressCountry": "BR"
-        },
-        "hasMap": "https://www.google.com/maps/search/?api=1&query=Pra%C3%A7a%20das%20Na%C3%A7%C3%B5es%20Unidas%2C%2060%20-%20Ano%20Bom%2C%20Barra%20Mansa%20-%20RJ%2C%2027323-360",
-        "areaServed": { "@type": "City", "name": "Barra Mansa" },
-        "contactPoint": {
-          "@type": "ContactPoint",
-          "contactType": "customer service",
-          "telephone": "+55-24-99935-9784",
-          "availableLanguage": "pt-BR"
-        },
-        "employee": {
-          "@type": "Person",
-          "name": "Dra. Barbara Daniela Domingueti Dias",
-          "jobTitle": "Cirurgiã-dentista · Responsável técnica",
-          "identifier": {
-            "@type": "PropertyValue",
-            "propertyID": "CRO-RJ",
-            "value": "42247"
-          }
-        },
-        "sameAs": ["https://www.instagram.com/medicmaisbarramansa/"]
-      }
-    </script>
+    <!-- clinica:jsonld -->
 
     <!--
       Google Tag Manager, condicionado a VITE_GTM_ID (ex.: GTM-5CJDZL8K, citado no SPEC).

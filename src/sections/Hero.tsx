@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { ArrowDown, BadgeCheck, MapPin } from 'lucide-react'
 import { clinica } from '@/data/clinica'
-import { pendingCopy } from '@/sections/_pending-copy'
+import { cn } from '@/lib/utils'
 import { useHeroIntro } from '@/hooks/useHeroIntro'
 import { useReveal } from '@/hooks/useReveal'
 import { Section } from '@/components/layout/Section'
@@ -10,7 +10,7 @@ import { WhatsAppCta, ctaStyles } from '@/components/ui/whatsapp-cta'
 import { MagneticButton } from '@/components/motion/MagneticButton'
 
 const { hero, ui, endereco, responsavelTecnico: rt } = clinica
-const foto = pendingCopy.imagens.hero
+const foto = hero.imagem
 
 /** #inicio — headline, 2 CTAs, foto e selo da responsável técnica (CFO). */
 export default function Hero() {
@@ -36,12 +36,12 @@ export default function Hero() {
             <MagneticButton className="w-full sm:w-auto">
               <WhatsAppCta origem="hero" className="min-h-14 w-full px-7 sm:w-auto" />
             </MagneticButton>
-            <a href="#servicos" className={`${ctaStyles.base} ${ctaStyles.quiet} min-h-14 px-7 text-body`}>
+            <a href="#servicos" className={cn(ctaStyles.base, ctaStyles.quiet, ctaStyles.size.md, 'min-h-14 px-7')}>
               {ui.ctaServicos}
               <ArrowDown
                 className="size-4 transition-transform duration-200 ease-out-soft group-hover/cta:translate-y-0.5"
                 aria-hidden="true"
-            />
+              />
             </a>
           </div>
           <p data-anim="hero-cta" className="mt-8 flex items-center gap-2 text-small text-ink-muted">
@@ -57,13 +57,13 @@ export default function Hero() {
           >
             <img
               data-anim="parallax"
-                src={foto.webp}
-                alt={foto.alt}
-                width={foto.width}
-                height={foto.height}
-                fetchPriority="high"
-                decoding="async"
-                className="absolute inset-x-0 -top-[5%] h-[110%] w-full object-cover"
+              src={foto.src}
+              alt={foto.alt}
+              width={foto.width}
+              height={foto.height}
+              fetchPriority="high"
+              decoding="async"
+              className="absolute inset-x-0 -top-[5%] h-[110%] w-full object-cover"
             />
           </div>
 
@@ -76,9 +76,8 @@ export default function Hero() {
             </span>
             <span className="min-w-0">
               <span className="block text-small font-medium text-ink">{rt.name}</span>
-              <span className="block text-small text-ink-muted">
-                {pendingCopy.labels.responsavelTecnica} · {rt.cro}
-              </span>
+              <span className="block text-small text-ink-muted">{ui.labels.responsavelTecnica}</span>
+              <span className="block text-small whitespace-nowrap text-ink-muted tabular-nums">{rt.cro}</span>
             </span>
           </div>
         </div>

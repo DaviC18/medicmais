@@ -1,5 +1,5 @@
 import type { RefObject } from 'react'
-import { gsap, MQ_MOTION_OK, ScrollTrigger, useGSAP } from '@/lib/gsap'
+import { gsap, loadScrollTrigger, MQ_MOTION_OK, useGSAP } from '@/lib/gsap'
 
 export type UseHeaderHideOptions = {
   /**
@@ -21,6 +21,8 @@ export type UseHeaderHideOptions = {
  * - Volta a aparecer quando algo dentro dele recebe foco (teclado) e no topo
  *   da página.
  * - Com `prefers-reduced-motion: reduce` o header fica sempre visível.
+ * - Usa o ScrollTrigger sob demanda (`loadScrollTrigger`): até ele chegar o
+ *   header só fica visível, que é o estado natural no topo da página.
  *
  * @example
  * const ref = useRef<HTMLElement>(null)
@@ -37,47 +39,55 @@ export function useHeaderHide(
       const el = ref.current
       if (!el) return
       el.dataset.hidden = 'false'
+      let cancelled = false
+      let mm: gsap.MatchMedia | undefined
 
-      const mm = gsap.matchMedia()
-      mm.add(MQ_MOTION_OK, () => {
-        let hidden = false
-        const set = (next: boolean) => {
-          if (next === hidden) return
-          hidden = next
-          el.dataset.hidden = String(next)
-          gsap.to(el, {
-            yPercent: next ? -100 : 0,
-            duration: next ? 0.35 : 0.45,
-            ease: next ? 'power2.in' : 'power3.out',
-            overwrite: 'auto',
+      loadScrollTrigger().then((ScrollTrigger) => {
+        if (cancelled) return
+        mm = gsap.matchMedia()
+        mm.add(MQ_MOTION_OK, () => {
+          let hidden = false
+          const set = (next: boolean) => {
+            if (next === hidden) return
+            hidden = next
+            el.dataset.hidden = String(next)
+            gsap.to(el, {
+              yPercent: next ? -100 : 0,
+              duration: next ? 0.35 : 0.45,
+              ease: next ? 'power2.in' : 'power3.out',
+              overwrite: 'auto',
+            })
+          }
+
+          if (disabled) {
+            set(false)
+            return
+          }
+
+          const st = ScrollTrigger.create({
+            start: 0,
+            end: 'max',
+            onUpdate: (self) => {
+              if (self.scroll() < offset) set(false)
+              else set(self.direction === 1)
+            },
           })
-        }
 
-        if (disabled) {
-          set(false)
-          return
-        }
+          const onFocus = () => set(false)
+          el.addEventListener('focusin', onFocus)
 
-        const st = ScrollTrigger.create({
-          start: 0,
-          end: 'max',
-          onUpdate: (self) => {
-            if (self.scroll() < offset) set(false)
-            else set(self.direction === 1)
-          },
+          return () => {
+            st.kill()
+            el.removeEventListener('focusin', onFocus)
+          }
         })
-
-        const onFocus = () => set(false)
-        el.addEventListener('focusin', onFocus)
-
-        return () => {
-          st.kill()
-          el.removeEventListener('focusin', onFocus)
-        }
+      }).catch(() => {
+        // Sem ScrollTrigger (rede): conteúdo fica no estado final, sem animação.
       })
 
       return () => {
-        mm.revert()
+        cancelled = true
+        mm?.revert()
         el.dataset.hidden = 'false'
       }
     },

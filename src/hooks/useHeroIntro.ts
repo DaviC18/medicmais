@@ -1,13 +1,15 @@
 import type { RefObject } from 'react'
-import { gsap, MQ_MOTION_OK, SplitText, useGSAP } from '@/lib/gsap'
+import { gsap, MQ_HERO_WIDE, MQ_MOTION_OK, SplitText, useGSAP } from '@/lib/gsap'
 
 /**
  * Timeline de entrada do Hero (CONTRACTS §2). Total ≈ 1.4s (≤ 1.6s).
  *
  * Marque dentro de `scope`:
  * - `data-anim="hero-badge"` — selo/eyebrow (fade + y).
- * - `data-anim="hero-title"` — h1; palavras sobem com fade (SplitText,
- *   revertido ao fim → DOM volta a ser texto puro).
+ * - `data-anim="hero-title"` — h1. A partir de 1024px (foto ao lado = LCP),
+ *   as palavras sobem com fade (SplitText, revertido ao fim → DOM volta a ser
+ *   texto puro). Abaixo de 1024px o h1 é o LCP: só um leve assentamento em y,
+ *   SEM opacity, para pintar no 1º frame (DECISIONS D24).
  * - `data-anim="hero-sub"`   — subtítulo (fade + y).
  * - `data-anim="hero-cta"`   — wrapper dos CTAs; pode haver mais de um
  *   (entram em sequência).
@@ -47,7 +49,9 @@ export function useHeroIntro(scope: RefObject<HTMLElement | null>): void {
       const one = (v: string) => root.querySelector<HTMLElement>(`[data-anim="${v}"]`)
 
       const mm = gsap.matchMedia()
-      mm.add(MQ_MOTION_OK, () => {
+      mm.add({ motion: MQ_MOTION_OK, wide: MQ_HERO_WIDE }, (ctx) => {
+        const { motion, wide } = ctx.conditions as { motion: boolean; wide: boolean }
+        if (!motion) return
         const badge = one('hero-badge')
         const title = one('hero-title')
         const sub = one('hero-sub')
@@ -62,7 +66,10 @@ export function useHeroIntro(scope: RefObject<HTMLElement | null>): void {
         if (badge) {
           tl.from(badge, { autoAlpha: 0, y: 12, duration: 0.6 }, 0)
         }
-        if (title) {
+        if (title && !wide) {
+          tl.from(title, { y: '0.25em', duration: 1, ease: 'expo.out' }, 0.05)
+        }
+        if (title && wide) {
           const split = SplitText.create(title, { type: 'words' })
           tl.from(
             split.words,

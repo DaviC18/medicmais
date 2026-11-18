@@ -133,7 +133,6 @@
   html {
     @apply font-sans;
     scroll-behavior: smooth;
-    scroll-padding-top: var(--spacing-header);
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
   }

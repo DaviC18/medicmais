@@ -2,7 +2,7 @@
 // Pendências marcadas com TODO(conteudo) — não inventar dados (números, nomes, fotos).
 // Regras CFO: sem promessa de resultado, sem preços/promoções, sem "o melhor/único".
 
-import type { Clinica, TeamMember } from './types'
+import type { Clinica, TeamMember } from './types.ts'
 
 const enderecoCompleto = 'Praça das Nações Unidas, 60 - Ano Bom, Barra Mansa - RJ, 27323-360'
 
@@ -45,6 +45,14 @@ export const clinica: Clinica = {
     titulo: 'Cuidado odontológico para você e toda a sua família',
     subtitulo:
       'Atendimento humanizado, com acolhimento e responsabilidade, no Ano Bom, em Barra Mansa. Agende sua avaliação pelo WhatsApp.',
+    // TODO(conteudo): foto real (recepção ou consultório), AVIF/WebP. Placeholder neutro 4:5.
+    // Candidata a LCP: ao trocar o arquivo, avisar o 04 (preload no index.html).
+    imagem: {
+      src: '/images/hero-placeholder.webp',
+      width: 1200,
+      height: 1500,
+      alt: 'Consultório odontológico da MedicMais Barra Mansa',
+    },
   },
 
   sobre: {
@@ -160,6 +168,21 @@ export const clinica: Clinica = {
   // Só preencher com dado real (anos, pacientes). Vazio = seção não renderiza.
   numeros: [],
 
+  seo: {
+    // TODO(conteudo): domínio final. Mesmo placeholder do index.html, robots.txt e sitemap.xml (D10).
+    siteUrl: 'https://odonto.medicmaisbarramansa.com.br/',
+    descricao:
+      'Atendimento odontológico humanizado para você e sua família no Ano Bom, em Barra Mansa (RJ): clínico geral, prevenção e diagnóstico, próteses e implantes dentários após avaliação.',
+    imagem: '/og-image.jpg',
+    logo: '/brand/medicmais-logo-512.png',
+  },
+
+  placeholders: {
+    // TODO(conteudo): foto da Dra. Barbara (responsavelTecnico.photo). Placeholder neutro 4:5;
+    // a foto real deve manter a proporção 4:5 (as dimensões abaixo são usadas no <img>).
+    equipe: { src: '/images/equipe-placeholder.webp', width: 800, height: 1000 },
+  },
+
   ui: {
     skipLink: 'Pular para o conteúdo',
     nav: [
@@ -175,5 +198,49 @@ export const clinica: Clinica = {
     ctaAgendarAvaliacao: 'Agendar avaliação',
     ctaLigar: 'Ligar para a clínica',
     ctaComoChegar: 'Como chegar',
+
+    // TODO(conteudo): copy proposta pelo 02-sections (sem promessa de resultado, CFO);
+    // validar títulos e intros com a clínica.
+    secoes: {
+      servicos: {
+        titulo: 'Tratamentos odontológicos',
+        intro:
+          'Todo tratamento começa por uma avaliação. Depois dela, o dentista explica o que encontrou e as opções para o seu caso.',
+      },
+      equipe: { titulo: 'Quem cuida de você' },
+      clinica: { titulo: 'Conheça a clínica' },
+      depoimentos: {
+        titulo: 'O que os pacientes destacam',
+        nota: 'Resumo das avaliações 5 estrelas publicadas no site da clínica.',
+      },
+      numeros: { titulo: 'A MedicMais em números' },
+      faq: {
+        titulo: 'Perguntas frequentes',
+        intro: 'Não encontrou o que procurava? A nossa equipe responde pelo WhatsApp.',
+      },
+      contato: {
+        titulo: 'Agende sua avaliação',
+        texto:
+          'Envie uma mensagem pelo WhatsApp. A recepção responde para combinar o melhor dia e horário para você.',
+      },
+    },
+
+    labels: {
+      navPrincipal: 'Navegação principal',
+      menuAbrir: 'Abrir menu',
+      menuFechar: 'Fechar menu',
+      menuTitulo: 'Menu',
+      endereco: 'Endereço',
+      telefone: 'Telefone',
+      whatsapp: 'WhatsApp',
+      horarios: 'Horários',
+      instagram: 'Instagram',
+      cnpj: 'CNPJ',
+      responsavelTecnica: 'Responsável técnica',
+      mapaTitulo: 'Mapa com a localização da MedicMais Barra Mansa',
+      estrelas: 'de 5 estrelas',
+      direitos: 'Todos os direitos reservados.',
+      novaAba: '(abre em nova aba)',
+    },
   },
 }

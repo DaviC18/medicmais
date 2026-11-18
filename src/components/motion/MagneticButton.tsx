@@ -1,7 +1,9 @@
-import type { PointerEvent, ReactNode } from 'react'
-import { domAnimation, LazyMotion, m, useMotionValue, useReducedMotion, useSpring } from 'motion/react'
+import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
+import { LazyMotion, useReducedMotion } from 'motion/react'
+import * as m from 'motion/react-m'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
+import { loadMotionFeatures } from './loadFeatures'
 
 type MagneticButtonProps = {
   /** O CTA real (`<a>` / `Button`). Ele mantém foco, href e eventos. */
@@ -15,7 +17,8 @@ type MagneticButtonProps = {
 
 /** Mesmo valor de `MQ_FINE_POINTER` em lib/gsap (sem importar o GSAP aqui). */
 const MQ_FINE_POINTER = '(hover: hover) and (pointer: fine)'
-const SPRING = { stiffness: 260, damping: 20, mass: 0.6 }
+const SPRING = { type: 'spring', stiffness: 260, damping: 20, mass: 0.6 } as const
+const REST = { x: 0, y: 0 }
 
 /**
  * Wrapper "magnético" para o CTA principal: o botão segue levemente o
@@ -26,6 +29,9 @@ const SPRING = { stiffness: 260, damping: 20, mass: 0.6 }
  * - Desligado com reduced motion.
  * - Anima só transform do `<span>` wrapper — o filho fica livre (pode estar
  *   dentro de `data-anim="hero-cta"`, que é animado pelo GSAP no PAI).
+ * - Motion enxuto: `motion/react-m` + features assíncronas (DECISIONS D22). Até
+ *   o chunk chegar, é um `<span>` comum e o CTA funciona normalmente. O alvo
+ *   (x/y) vai por `animate`, com uma atualização por frame no máximo.
  *
  * @example
  * <div data-anim="hero-cta" className="flex gap-3">
@@ -41,29 +47,34 @@ export function MagneticButton({ children, className, strength = 0.25, max = 8 }
   const finePointer = useMediaQuery(MQ_FINE_POINTER)
   const active = finePointer && !reduce
 
-  const mx = useMotionValue(0)
-  const my = useMotionValue(0)
-  const x = useSpring(mx, SPRING)
-  const y = useSpring(my, SPRING)
+  const [target, setTarget] = useState(REST)
+  const frame = useRef(0)
 
   const clamp = (v: number) => Math.max(-max, Math.min(max, v))
 
   const onPointerMove = (e: PointerEvent<HTMLSpanElement>) => {
-    if (!active || e.pointerType !== 'mouse') return
+    if (e.pointerType !== 'mouse') return
     const r = e.currentTarget.getBoundingClientRect()
-    mx.set(clamp((e.clientX - (r.left + r.width / 2)) * strength))
-    my.set(clamp((e.clientY - (r.top + r.height / 2)) * strength))
+    const next = {
+      x: Math.round(clamp((e.clientX - (r.left + r.width / 2)) * strength)),
+      y: Math.round(clamp((e.clientY - (r.top + r.height / 2)) * strength)),
+    }
+    cancelAnimationFrame(frame.current)
+    frame.current = requestAnimationFrame(() =>
+      setTarget((prev) => (prev.x === next.x && prev.y === next.y ? prev : next)),
+    )
   }
   const reset = () => {
-    mx.set(0)
-    my.set(0)
+    cancelAnimationFrame(frame.current)
+    setTarget(REST)
   }
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion features={loadMotionFeatures} strict>
       <m.span
         className={cn('inline-flex', className)}
-        style={active ? { x, y } : undefined}
+        animate={active ? target : REST}
+        transition={SPRING}
         onPointerMove={active ? onPointerMove : undefined}
         onPointerLeave={active ? reset : undefined}
         whileTap={reduce ? undefined : { scale: 0.97 }}

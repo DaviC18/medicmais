@@ -1,28 +1,58 @@
-import { useRef, useState, type MouseEvent } from 'react'
-import { Menu, Phone, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
+import { Dialog } from '@base-ui/react/dialog'
+import { Menu } from 'lucide-react'
 import { clinica } from '@/data/clinica'
-import { pendingCopy } from '@/sections/_pending-copy'
-import { telLink } from '@/lib/whatsapp'
 import { useHeaderHide } from '@/hooks/useHeaderHide'
 import { Container } from '@/components/layout/Container'
-import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { WhatsAppCta } from '@/components/ui/whatsapp-cta'
 
+// Popup do menu mobile sob demanda (DECISIONS D27). Root e Trigger ficam no JS inicial:
+// o botão funciona desde o 1º paint e o Root guarda o estado até o Popup chegar.
+// Sem React.lazy/Suspense: com o Popup dentro de um Suspense, o Base UI deixava o foco sair
+// do menu pelo Tab. O componente só é renderizado depois de importado.
+const loadMobileMenu = () => import('@/components/ui/mobile-menu')
+type MobileMenuComponent = Awaited<ReturnType<typeof loadMobileMenu>>['default']
+const MQ_DESKTOP_NAV = '(min-width: 80rem)' // xl: nav inline, sem menu
+
 const { nome, logo, ui } = clinica
-const { labels } = pendingCopy
+const { labels } = ui
 
 function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-/** Header fixo: marca, âncoras (lg+), CTA WhatsApp; menu em Sheet abaixo de lg. */
+/** Header fixo: marca, âncoras (xl+), CTA WhatsApp; menu em Sheet abaixo de xl. */
 export default function Header() {
   const ref = useRef<HTMLElement>(null)
   const [open, setOpen] = useState(false)
+  // Popup do menu: importado na 1ª intenção (hover/foco/toque no botão), ao abrir, ou no ocioso.
+  const [MobileMenu, setMobileMenu] = useState<MobileMenuComponent | null>(null)
+  const wantMenu = useCallback(() => {
+    loadMobileMenu().then(
+      (mod) => setMobileMenu(() => mod.default),
+      () => undefined,
+    )
+  }, [])
   // Âncora clicada dentro do Sheet: rola só depois que o Sheet fecha (o scroll lock bloqueia antes).
   const pendingHash = useRef<string | null>(null)
 
   useHeaderHide(ref, { disabled: open })
+
+  // Abaixo de lg, baixa o chunk do menu quando o navegador fica ocioso após o load.
+  useEffect(() => {
+    if (window.matchMedia(MQ_DESKTOP_NAV).matches) return
+    let idle = 0
+    const prefetch = () => {
+      const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500))
+      idle = ric(wantMenu)
+    }
+    if (document.readyState === 'complete') prefetch()
+    else window.addEventListener('load', prefetch, { once: true })
+    return () => {
+      window.removeEventListener('load', prefetch)
+      if (idle) (window.cancelIdleCallback ?? window.clearTimeout)(idle)
+    }
+  }, [wantMenu])
 
   const onSheetLink = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
     event.preventDefault()
@@ -59,7 +89,7 @@ export default function Header() {
           </span>
         </a>
 
-        <nav aria-label={labels.navPrincipal} className="hidden lg:block">
+        <nav aria-label={labels.navPrincipal} className="hidden xl:block">
           <ul className="flex items-center gap-1">
             {ui.nav.map((item) => (
               <li key={item.href}>
@@ -77,56 +107,24 @@ export default function Header() {
         <div className="flex shrink-0 items-center gap-2">
           <WhatsAppCta origem="header" size="sm" className="hidden min-h-11 px-5 md:inline-flex" />
 
-          <Sheet open={open} onOpenChange={setOpen} onOpenChangeComplete={onOpenChangeComplete}>
-            <SheetTrigger
+          <Dialog.Root
+            open={open}
+            onOpenChange={(next) => {
+              if (next) wantMenu()
+              setOpen(next)
+            }}
+            onOpenChangeComplete={onOpenChangeComplete}
+          >
+            <Dialog.Trigger
               aria-label={labels.menuAbrir}
-              className="grid size-11 place-items-center rounded-full text-ink transition-colors hover:bg-ink/[0.06] lg:hidden"
+              onPointerEnter={wantMenu}
+              onFocus={wantMenu}
+              className="-mr-2.5 grid size-11 place-items-center rounded-full text-ink transition-colors hover:bg-ink/[0.06] xl:hidden"
             >
               <Menu className="size-6" strokeWidth={1.75} aria-hidden="true" />
-            </SheetTrigger>
-            <SheetContent
-              side="right"
-              showCloseButton={false}
-              className="w-[min(22rem,88vw)] gap-0 border-line bg-surface p-0"
-            >
-              <div className="flex h-header items-center justify-between px-gutter">
-                <SheetTitle className="font-medium text-ink-muted">
-                  <span className="text-small">{labels.menuTitulo}</span>
-                </SheetTitle>
-                <SheetClose
-                  aria-label={labels.menuFechar}
-                  className="grid size-11 place-items-center rounded-full text-ink transition-colors hover:bg-ink/[0.06]"
-                >
-                  <X className="size-6" strokeWidth={1.75} aria-hidden="true" />
-                </SheetClose>
-              </div>
-              <nav aria-label={labels.navPrincipal} className="px-gutter pt-2">
-                <ul className="flex flex-col">
-                  {ui.nav.map((item) => (
-                    <li key={item.href} className="border-b border-line last:border-b-0">
-                      <a
-                        href={item.href}
-                        onClick={(event) => onSheetLink(event, item.href)}
-                        className="flex min-h-14 items-center font-display text-subtitle text-ink transition-colors hover:text-brand"
-                      >
-                        {item.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-              <div className="mt-auto flex flex-col gap-3 border-t border-line px-gutter py-6">
-                <WhatsAppCta origem="header-mobile" className="w-full" />
-                <a
-                  href={telLink()}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full text-small font-medium text-ink hover:bg-ink/[0.05]"
-                >
-                  <Phone className="size-4" aria-hidden="true" />
-                  {ui.ctaLigar} · {clinica.telefone}
-                </a>
-              </div>
-            </SheetContent>
-          </Sheet>
+            </Dialog.Trigger>
+            {MobileMenu && <MobileMenu onLink={onSheetLink} />}
+          </Dialog.Root>
         </div>
       </Container>
     </header>

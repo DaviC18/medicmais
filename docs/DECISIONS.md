@@ -106,3 +106,80 @@ O texto do hero já é animado pelo `useHeroIntro`, e o contrato do 03 proíbe R
 
 ### D-S3 · Textos de UI temporários
 Os títulos de seção e os rótulos de acessibilidade que não existem em `clinica.ts` ficam em `src/sections/_pending-copy.ts`, até o 01 movê-los para `clinica.ui` (pedido no HANDOFF). A regra "nada de texto hardcoded nos componentes" continua valendo, porque nenhum JSX tem string literal.
+
+## 2026-11-17 · 01-foundation (Fase 2)
+
+### D19 · JSON-LD e preload da fonte via plugin Vite
+- `vite.config.ts` tem o plugin `clinicaHtml` (`transformIndexHtml`, ordem normal, para ter `ctx.bundle` no build).
+- JSON-LD: `src/data/jsonld.ts` monta o `Dentist` a partir de `clinica` e substitui o marcador `<!-- clinica:jsonld -->` do `index.html`, em dev e no build. O resultado foi comparado com o bloco estático do 04 (D12): JSON idêntico. Sem o marcador o build falha, para não publicar sem dados estruturados.
+- Derivações: telefone `(24) 3323-9990` → `+55-24-3323-9990`; CRO `CRO-RJ 42247` → `PropertyValue` (`CRO-RJ` / `42247`); `employee` é objeto com 1 dentista e array com mais. `geo` entra quando `clinica.endereco.geo` existir. `openingHoursSpecification` fica de fora até haver horário real: `horarios` é texto livre (TODO no `jsonld.ts`).
+- Campos de SEO sem lugar no contrato foram para o aditivo `clinica.seo` (`siteUrl`, `descricao`, `imagem`, `logo`). Canonical, OG e Twitter continuam estáticos no `index.html` (04). O domínio placeholder agora também está em `clinica.seo.siteUrl`.
+- Preload: só no build, `<link rel="preload" as="font" type="font/woff2" crossorigin>` para `fraunces-latin-opsz-normal-<hash>.woff2` (h1/LCP). O build falha se o arquivo não for encontrado (ex.: troca de fonte ou de subset).
+- `clinica.ts` importa `./types.ts` com extensão: o arquivo também é checado pelo `tsconfig.node.json` (`module: nodenext`), que exige extensão em imports relativos.
+- No dev, mudanças em `clinica.ts` reiniciam o servidor (dependência do config) e o JSON-LD é refeito.
+
+### D20 · Copy de UI em `clinica.ui`
+O conteúdo de `src/sections/_pending-copy.ts` (02) foi movido. Aditivos novos no tipo `Clinica`:
+- `ui.secoes` (títulos e intros das seções) e `ui.labels` (rótulos e textos de acessibilidade);
+- `hero.imagem: Imagem` (`{ src, width, height, alt }`);
+- `placeholders.equipe` (`{ src, width, height }`). `responsavelTecnico.photo` segue `undefined`; a seção Equipe usa o placeholder como fallback. A foto real deve manter 4:5, porque as dimensões do `<img>` vêm do placeholder.
+A copy proposta pelo 02 foi marcada com `TODO(conteudo)` para validação.
+
+### D21 · `cn()` com tokens próprios
+`src/lib/utils.ts` usa `extendTailwindMerge` com o `theme` do tailwind-merge v3: `text` (display, title, subtitle, lead, body, small, eyebrow), `spacing` (section, gutter, header), `container` (page, reading), `shadow` (soft, card, lift) e `ease` (out-soft). Cores custom não precisam de registro: o padrão do v3 já aceita qualquer nome de cor. Regra: todo token novo dessas famílias no `@theme` deve ser acrescentado aqui.
+
+## 2026-11-17 · 03-motion (Fase 2)
+
+### D22 · Motion fora do JS inicial
+`MotionCard` e `MagneticButton` passaram a usar `motion/react-m` + `<LazyMotion features={loadMotionFeatures} strict>`. As features (`domAnimation`) vêm num chunk próprio via `import()`.
+- Sem features, um `m.*` renderiza como elemento comum. O card e o CTA aparecem no 1º paint, e o hover/tap liga depois.
+- Nenhum deles usa `initial`, então não há estado escondido esperando o chunk.
+- O `MagneticButton` trocou `useMotionValue`/`useSpring`, que puxavam o motor de animação para o bundle inicial, por `animate={{x,y}}` com transição spring. A atualização é limitada a 1 por frame.
+- O `FabReveal` virou um shell sem Motion. `FabRevealMotion` é carregado (junto com as features) em `requestIdleCallback` após o `load`, ou no 1º scroll. Ele usa um listener de scroll passivo no lugar do `useScroll`.
+- Se algum chunk falhar: o FAB cai num container fixo estático (sempre visível) e os `m.*` ficam estáticos, sem rejeição não tratada.
+- Alternativa avaliada e não adotada: `React.lazy` do card e do botão inteiros. Economizaria mais ~12 kB gzip, mas troca o nó do CTA do hero depois do paint (pode perder foco ou hover).
+
+### D23 · ScrollTrigger sob demanda + vendors separados
+`loadScrollTrigger()` (memoizado) importa, registra e configura o ScrollTrigger. `useReveal` e `useHeaderHide` esperam essa promise.
+- Como o plugin chega depois do 1º paint, `useReveal` não anima o que já está na tela ou acima dela (`isSeen`). Isso evita esconder conteúdo que o usuário já está vendo, inclusive com link direto para uma âncora.
+- O parallax vale para tudo. A foto do hero, a ≥768px, fica praticamente no ponto neutro no topo da página.
+- O SplitText e o core continuam síncronos, porque o intro do hero roda antes do paint.
+- `vite.config.ts` ganhou `codeSplitting.groups`: `react` (react, react-dom, scheduler) e `gsap` (sem ScrollTrigger/Observer). Isso tirou o aviso de 500 kB sem mexer em `chunkSizeWarningLimit` e dá cache longo aos vendors.
+- Resultado: JS inicial de 204.05 → 165.91 kB gzip.
+
+### D24 · Hero: h1 visível no 1º frame abaixo de 1024px
+Com o h1 dividido em palavras e com `autoAlpha: 0`, o Chrome descartava o h1 como LCP: cada palavra vira um bloco pequeno, invisível no 1º frame. A 360px, o LCP virava o subtítulo, em ~590 ms.
+- Abaixo de `MQ_HERO_WIDE` (1024px), o h1 só assenta em y (`0.25em → 0`, sem opacity), e o LCP volta a ser o h1 em ~150 ms.
+- A partir de 1024px a foto é o LCP e o split por palavras continua.
+
+### D25 · Ritmo e custo de layout
+- O `stagger` limita a sequência total a 0.48 s (`PRESETS.stagger.maxTotal`).
+- `useReveal` lê todos os `getBoundingClientRect` antes da primeira escrita de estilo.
+- Trace de scroll com CPU 4× (360 e 1440): 0 layouts forçados por JS e 0 tasks acima de 50 ms. Animações seguem só em transform/opacity.
+- Lenis continua fora (D18).
+
+
+## 2026-11-17 · 02-sections (Fase 2)
+
+### D26 · Serviços: um painel com linhas no lugar de quatro cards
+- Os 4 serviços viraram linhas de um único painel (`rounded-xl bg-card shadow-soft`, divisórias `divide-line`): título com ícone à esquerda e descrição à direita (≥640px). Abaixo disso, a descrição fica sob o título, com a largura toda.
+- Motivo: os cards com `MotionCard` subiam no hover sem serem links, o que sugeria um clique que não existe. A grade de cards iguais com ícone, título e texto é o padrão genérico que o impeccable recusa. A coluna desencontrada (`even:mt-14`) também deixava espaço vazio dentro dos cards.
+- `MotionCard` continua em `src/components/motion/` para um card que seja link. Nenhuma seção o usa hoje.
+- `data-anim="stagger"` agora fica na `<ul>` do painel. Os filhos animados são os `<li>`.
+
+### D27 · Menu mobile carregado sob demanda
+- O conteúdo do menu (Popup, Portal, Backdrop e o gerenciador de foco do Base UI) saiu do JS inicial e foi para `src/components/ui/mobile-menu.tsx`. O `Header` usa `Dialog.Root` e `Dialog.Trigger` direto de `@base-ui/react/dialog`, e o `sheet.tsx` só entra no chunk do menu.
+- O chunk é importado na primeira intenção: hover ou foco no botão, ao abrir, ou no ocioso após o `load` (só abaixo de 1280px). Ele só é renderizado depois de importado, guardado em estado.
+- Não use `React.lazy` + `Suspense` aqui. Com o Popup dentro de um `Suspense`, o Tab saía do menu para o skip link (teste no Chrome headless). Com o componente guardado em estado, o foco fica preso como na versão síncrona.
+- Se o usuário tocar antes de o chunk chegar, o Root abre e o Popup aparece quando o chunk carrega. O foco vai para "Fechar menu" (testado com o chunk atrasado 1,5 s).
+- Resultado: JS inicial de 165.91 para 158.91 kB gzip. O chunk `mobile-menu` tem 8.93 kB gzip. O valor inclui a saída do `MotionCard`.
+
+### D28 · Ajustes de composição e ritmo
+- Nav inline e CTA no header só a partir de `xl` (1280px). Entre 1024 e 1279px, o nome da marca ficava truncado ("MedicMais Barr..."). Abaixo de `xl`, o header usa o menu.
+- Rodapé: 12 colunas só a partir de `xl` e 3 colunas a partir de `md`. Antes, em 1024px, o endereço quebrava em "Unidas, / 60". O `pb-28` vale em todas as larguras, para o FAB não cobrir o CNPJ.
+- Equipe: no DOM, o h2 vem antes da foto. No mobile a ordem fica título, foto e dados. No `lg`, a foto ocupa as linhas da grade e o título e os dados ficam centralizados à direita.
+- Selo do hero: nome, "Responsável técnica" e CRO em 3 linhas. O CRO usa `whitespace-nowrap`. Antes, "CRO-RJ / 42247" quebrava no mobile.
+- "Ligar para a clínica" e o telefone ficam em dois trechos com `flex-wrap`, sem o "·" sobrando no fim da linha. O número não quebra.
+- Contato: endereço em 3 linhas (rua; bairro, cidade e UF; CEP), igual ao rodapé. A lista de contato e o mapa ficam com a mesma altura no `lg`.
+- FAQ: a pergunta ganha sublinhado no hover (o trigger não tinha resposta ao ponteiro).
+- O título do menu ("Menu") usa a fonte sans, porque é um rótulo e não um título editorial.

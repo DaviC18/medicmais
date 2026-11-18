@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
-import { domAnimation, LazyMotion, m, useReducedMotion, type HTMLMotionProps } from 'motion/react'
+import { LazyMotion, useReducedMotion, type HTMLMotionProps } from 'motion/react'
+import * as m from 'motion/react-m'
 import { cn } from '@/lib/utils'
+import { loadMotionFeatures } from './loadFeatures'
 
 type MotionCardProps = Omit<HTMLMotionProps<'article'>, 'children'> & {
   children?: ReactNode
@@ -20,7 +22,11 @@ type MotionCardProps = Omit<HTMLMotionProps<'article'>, 'children'> & {
  * e Motion nunca disputam o mesmo elemento.
  *
  * - A sombra extra é um pseudo-elemento cuja opacity transiciona (sem animar
- *   box-shadow → sem repaint caro). Também acende com foco por teclado.
+ *   box-shadow → sem repaint caro). Também acende com foco por teclado. É CSS
+ *   puro: funciona antes de o Motion carregar.
+ * - O lift usa `motion/react-m` + `LazyMotion` com features assíncronas
+ *   (`loadMotionFeatures`): o card renderiza no 1º paint como `<article>` comum
+ *   e ganha o hover quando o chunk de features chega (DECISIONS D22).
  * - Com reduced motion, não há deslocamento; só a sombra.
  * - Hover do Motion já ignora toque (não "gruda" no mobile).
  *
@@ -45,7 +51,7 @@ export function MotionCard({
   const Wrapper = wrapperAs
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion features={loadMotionFeatures} strict>
       <Wrapper className={wrapperClassName}>
         <m.article
           whileHover={reduce ? undefined : { y: -lift }}

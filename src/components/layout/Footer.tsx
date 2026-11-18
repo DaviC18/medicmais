@@ -1,11 +1,10 @@
 import { InstagramIcon } from '@/components/ui/instagram-icon'
 import { clinica } from '@/data/clinica'
-import { pendingCopy } from '@/sections/_pending-copy'
 import { telLink, trackWhatsApp, whatsappLink } from '@/lib/whatsapp'
 import { Container } from '@/components/layout/Container'
 
 const { nome, slogan, cnpj, endereco, telefone, whatsapp, instagram, logo, responsavelTecnico: rt } = clinica
-const { labels } = pendingCopy
+const { labels } = clinica.ui
 // @handle a partir da URL do Instagram (ex.: .../medicmaisbarramansa/ → @medicmaisbarramansa)
 const instagramHandle = `@${instagram.replace(/\/+$/, '').split('/').pop() ?? ''}`
 
@@ -17,10 +16,10 @@ export default function Footer() {
   const ano = new Date().getFullYear()
 
   return (
-    <footer className="bg-ink pt-16 pb-28 text-surface/85 sm:pb-12 lg:pt-20">
+    <footer className="bg-ink pt-16 pb-28 text-surface/85 lg:pt-20">
       <Container>
-        <div className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-12">
-          <div className="sm:col-span-2 lg:col-span-4">
+        <div className="grid gap-x-10 gap-y-12 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-12">
+          <div className="sm:col-span-2 md:col-span-3 xl:col-span-4">
             <div className="flex items-center gap-3">
               <span className="grid size-11 place-items-center rounded-full bg-surface">
                 <picture>
@@ -34,7 +33,7 @@ export default function Footer() {
             <p className="mt-5 max-w-[26ch] font-display text-subtitle text-surface/90">{slogan}</p>
           </div>
 
-          <div className="lg:col-span-3">
+          <div className="xl:col-span-3">
             <p className={heading}>{labels.endereco}</p>
             <address className="mt-3 not-italic">
               <a href={endereco.mapsLink} target="_blank" rel="noopener noreferrer" className={link}>
@@ -48,7 +47,7 @@ export default function Footer() {
             </address>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-2">
             <p className={heading}>{labels.telefone}</p>
             <ul className="mt-3 grid gap-1.5 tabular-nums">
               <li>
@@ -73,7 +72,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div className="lg:col-span-3">
+          <div className="xl:col-span-3">
             <p className={heading}>{labels.responsavelTecnica}</p>
             <p className="mt-3 text-surface">{rt.name}</p>
             <p>{rt.cro}</p>

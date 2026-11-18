@@ -1,12 +1,11 @@
 import { useRef } from 'react'
 import { clinica } from '@/data/clinica'
-import { pendingCopy } from '@/sections/_pending-copy'
 import { useReveal } from '@/hooks/useReveal'
 import { Section } from '@/components/layout/Section'
 import { Container } from '@/components/layout/Container'
 
 const { galeria } = clinica
-const copy = pendingCopy.secoes.clinica
+const copy = clinica.ui.secoes.clinica
 
 // Mosaico: a 1ª foto ocupa 2 linhas no desktop; as demais preenchem ao lado.
 const tile = (index: number) =>

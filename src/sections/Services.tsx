@@ -1,17 +1,18 @@
 import { useRef } from 'react'
 import { clinica } from '@/data/clinica'
-import { pendingCopy } from '@/sections/_pending-copy'
 import { iconFor } from '@/sections/_icons'
 import { useReveal } from '@/hooks/useReveal'
 import { Section } from '@/components/layout/Section'
 import { Container } from '@/components/layout/Container'
 import { WhatsAppCta } from '@/components/ui/whatsapp-cta'
-import { MotionCard } from '@/components/motion/MotionCard'
 
 const { servicos, ui } = clinica
-const copy = pendingCopy.secoes.servicos
+const copy = ui.secoes.servicos
 
-/** #servicos — título fixo à esquerda (lg) e cards em colunas desencontradas. */
+/**
+ * #servicos — título fixo à esquerda (lg) e os serviços como linhas de um único painel.
+ * Sem card por item: os serviços não são links, então nada sobe no hover (DECISIONS D26).
+ */
 export default function Services() {
   const scope = useRef<HTMLElement>(null)
   useReveal(scope)
@@ -31,24 +32,25 @@ export default function Services() {
           </div>
         </div>
 
-        {/* GSAP anima o <li> (wrapper do MotionCard); o hover Motion fica no <article> interno. */}
-        <ul data-anim="stagger" className="grid items-start gap-5 sm:grid-cols-2 lg:col-span-8">
+        <ul
+          data-anim="stagger"
+          className="divide-y divide-line rounded-xl bg-card px-6 shadow-soft sm:px-10 lg:col-span-8"
+        >
           {servicos.map((servico) => {
             const Icon = iconFor(servico.icon)
             return (
-              <MotionCard
+              <li
                 key={servico.id}
-                wrapperAs="li"
-                wrapperClassName="h-full sm:even:mt-14"
-                lift={3}
-                className="rounded-xl bg-card p-7 shadow-soft sm:p-8"
+                className="grid gap-x-10 gap-y-3 py-8 sm:grid-cols-[minmax(0,11fr)_minmax(0,10fr)] sm:py-10"
               >
-                  <span className="grid size-12 place-items-center rounded-full bg-brand-soft text-brand">
-                    <Icon className="size-6" strokeWidth={1.6} aria-hidden="true" />
+                <h3 className="flex items-start gap-4 text-subtitle text-ink">
+                  <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
+                    <Icon className="size-5" strokeWidth={1.6} aria-hidden="true" />
                   </span>
-                  <h3 className="mt-6 text-subtitle text-ink sm:mt-10">{servico.title}</h3>
-                  <p className="mt-3 text-ink-muted">{servico.description}</p>
-              </MotionCard>
+                  <span className="pt-1">{servico.title}</span>
+                </h3>
+                <p className="text-ink-muted sm:pt-1.5">{servico.description}</p>
+              </li>
             )
           })}
         </ul>

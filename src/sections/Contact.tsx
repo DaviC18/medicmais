@@ -1,7 +1,6 @@
 import { useRef } from 'react'
 import { ArrowUpRight, Clock, MapPin, Phone } from 'lucide-react'
 import { clinica } from '@/data/clinica'
-import { pendingCopy } from '@/sections/_pending-copy'
 import { telLink, trackWhatsApp, whatsappLink } from '@/lib/whatsapp'
 import { useReveal } from '@/hooks/useReveal'
 import { Section } from '@/components/layout/Section'
@@ -10,8 +9,8 @@ import { WhatsAppCta } from '@/components/ui/whatsapp-cta'
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
 
 const { endereco, telefone, whatsapp, horarios, ui } = clinica
-const copy = pendingCopy.secoes.contato
-const { labels } = pendingCopy
+const copy = ui.secoes.contato
+const { labels } = ui
 
 /** #contato — CTA final em painel navy + endereço, telefone, horários (se houver) e mapa lazy. */
 export default function Contact() {
@@ -36,13 +35,16 @@ export default function Contact() {
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-small font-medium text-surface/90 underline-offset-4 hover:text-surface hover:underline"
             >
               <Phone className="size-4" aria-hidden="true" />
-              {ui.ctaLigar} · {telefone}
+              <span className="flex flex-wrap justify-center gap-x-1.5">
+                <span>{ui.ctaLigar}</span>
+                <span className="whitespace-nowrap tabular-nums">{telefone}</span>
+              </span>
             </a>
           </div>
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-12">
-          <dl data-anim="stagger" className="grid content-start gap-px self-start overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1 xl:grid-cols-2">
+          <dl data-anim="stagger" className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1 xl:grid-cols-2">
             <div className="bg-card p-6 sm:col-span-2 lg:col-span-1 xl:col-span-2">
               <dt className="flex items-center gap-2 text-small font-medium text-ink-muted">
                 <MapPin className="size-4 text-brand" aria-hidden="true" />
@@ -50,9 +52,11 @@ export default function Contact() {
               </dt>
               <dd className="mt-2 text-ink">
                 <address className="not-italic">
-                  {endereco.rua} · {endereco.bairro}
+                  {endereco.rua}
                   <br />
-                  {endereco.cidade} · {endereco.uf} · {endereco.cep}
+                  {endereco.bairro} · {endereco.cidade} · {endereco.uf}
+                  <br />
+                  <span className="tabular-nums">{endereco.cep}</span>
                 </address>
                 <a
                   href={endereco.mapsLink}
@@ -123,7 +127,7 @@ export default function Contact() {
               title={labels.mapaTitulo}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="block aspect-[4/3] h-full min-h-72 w-full border-0 lg:aspect-auto lg:min-h-80"
+              className="block aspect-[4/3] w-full border-0 lg:aspect-auto lg:h-full lg:min-h-80"
             />
           </div>
         </div>

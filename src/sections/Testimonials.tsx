@@ -2,13 +2,12 @@ import { useRef } from 'react'
 import { Star } from 'lucide-react'
 import { clinica } from '@/data/clinica'
 import type { Testimonial } from '@/data/types'
-import { pendingCopy } from '@/sections/_pending-copy'
 import { useReveal } from '@/hooks/useReveal'
 import { Section } from '@/components/layout/Section'
 import { Container } from '@/components/layout/Container'
 
 const { depoimentos } = clinica
-const copy = pendingCopy.secoes.depoimentos
+const copy = clinica.ui.secoes.depoimentos
 // Avaliação literal só quando vier do Google com autor identificado; o resto é resumo.
 const isLiteral = (d: Testimonial) => d.source === 'google' && d.name !== 'Paciente'
 const temResumo = depoimentos.some((d) => !isLiteral(d))
@@ -26,7 +25,7 @@ function Stars({ rating }: { rating: Testimonial['rating'] }) {
         />
       ))}
       <span className="sr-only">
-        {rating} {pendingCopy.labels.estrelas}
+        {rating} {clinica.ui.labels.estrelas}
       </span>
     </div>
   )

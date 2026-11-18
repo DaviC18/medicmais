@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import { clinica } from '@/data/clinica'
-import { pendingCopy } from '@/sections/_pending-copy'
 import { useReveal } from '@/hooks/useReveal'
 import { Section } from '@/components/layout/Section'
 import { Container } from '@/components/layout/Container'
@@ -8,7 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { WhatsAppCta } from '@/components/ui/whatsapp-cta'
 
 const { faq } = clinica
-const copy = pendingCopy.secoes.faq
+const copy = clinica.ui.secoes.faq
 
 /** #faq — perguntas em Accordion (Base UI: teclado e aria prontos). */
 export default function FAQ() {
@@ -37,7 +36,7 @@ export default function FAQ() {
             {faq.map((item) => (
               <AccordionItem key={item.q} value={item.q} className="border-b border-ink/12">
                 <AccordionTrigger className="gap-6 py-6 hover:no-underline **:data-[slot=accordion-trigger-icon]:mt-1.5 **:data-[slot=accordion-trigger-icon]:size-5 **:data-[slot=accordion-trigger-icon]:text-brand">
-                  <span className="font-display text-lead font-medium text-ink">{item.q}</span>
+                  <span className="font-display text-lead font-medium text-ink decoration-ink/25 underline-offset-[0.2em] group-hover/accordion-trigger:underline">{item.q}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-7">
                   <p className="max-w-reading text-body text-ink-muted">{item.a}</p>

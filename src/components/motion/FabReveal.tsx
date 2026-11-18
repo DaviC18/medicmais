@@ -1,23 +1,39 @@
-import { useState, type ReactNode } from 'react'
-import { AnimatePresence, domAnimation, LazyMotion, m, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { FAB_POSITION, type FabRevealProps } from './fabTypes'
+import { importMotionFeatures } from './loadFeatures'
 
-type FabRevealProps = {
-  /** O botão flutuante (link do WhatsApp). NÃO use `position: fixed` nele. */
-  children: ReactNode
-  /**
-   * Posicionamento do container fixo. Padrão: canto inferior direito com
-   * safe-area. Sobrescreva se precisar.
-   */
-  className?: string
-  /** Fração da página rolada para aparecer (0–1). Padrão: 0.3. */
-  threshold?: number
+/** Fallback se o chunk animado falhar: FAB fixo, sempre visível, sem animação. */
+function FabStatic({ children, className }: FabRevealProps) {
+  return <div className={cn(FAB_POSITION, className)}>{children}</div>
+}
+
+/**
+ * Chunk animado + features do Motion juntos: quando o componente monta, as
+ * features já estão prontas (sem frame com `initial` "preso" em opacity 0).
+ * Se a rede falhar, cai no FabStatic (o CTA nunca some por falta de JS).
+ */
+const FabRevealMotion = lazy(() =>
+  Promise.all([import('./FabRevealMotion'), importMotionFeatures()])
+    .then(([mod]) => mod)
+    .catch(() => ({ default: FabStatic })),
+)
+
+type IdleWindow = Window & {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+  cancelIdleCallback?: (id: number) => void
 }
 
 /**
  * Mostra o FAB depois de `threshold` (30%) de rolagem e esconde ao voltar
  * acima disso (SPEC §3). Entrada: fade + y + scale leve; com reduced motion,
  * só fade.
+ *
+ * Carregamento (DECISIONS D22): este shell vai no JS inicial e não importa o
+ * Motion. A implementação animada (`FabRevealMotion`) é baixada quando o
+ * navegador fica ocioso após o load, ou no primeiro scroll — o que vier
+ * antes. Como o FAB só aparece depois de 30% de rolagem, nada visível depende
+ * do chunk no 1º paint.
  *
  * O próprio FabReveal é o elemento `fixed` (um ancestral com transform
  * quebraria um `fixed` no filho). Escondido, o FAB sai do DOM (fora da
@@ -31,37 +47,35 @@ type FabRevealProps = {
  *   </a>
  * </FabReveal>
  */
-export function FabReveal({ children, className, threshold = 0.3 }: FabRevealProps) {
-  const reduce = useReducedMotion()
-  const { scrollYProgress } = useScroll()
-  const [visible, setVisible] = useState(false)
+export function FabReveal(props: FabRevealProps) {
+  const [ready, setReady] = useState(false)
 
-  useMotionValueEvent(scrollYProgress, 'change', (v) => {
-    const next = v >= threshold
-    setVisible((prev) => (prev === next ? prev : next))
-  })
+  useEffect(() => {
+    const w = window as IdleWindow
+    let idleId: number | undefined
+    let timeoutId: number | undefined
+    const go = () => setReady(true)
 
-  const hidden = reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.92 }
+    const schedule = () => {
+      if (w.requestIdleCallback) idleId = w.requestIdleCallback(go, { timeout: 2000 })
+      else timeoutId = window.setTimeout(go, 1200)
+    }
+    if (document.readyState === 'complete') schedule()
+    else window.addEventListener('load', schedule, { once: true })
+    window.addEventListener('scroll', go, { once: true, passive: true })
 
+    return () => {
+      window.removeEventListener('load', schedule)
+      window.removeEventListener('scroll', go)
+      if (idleId !== undefined) w.cancelIdleCallback?.(idleId)
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+    }
+  }, [])
+
+  if (!ready) return null
   return (
-    <LazyMotion features={domAnimation}>
-      <AnimatePresence>
-        {visible && (
-          <m.div
-            key="fab"
-            className={cn(
-              'fixed right-[max(1.25rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-50',
-              className,
-            )}
-            initial={hidden}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={hidden}
-            transition={{ duration: reduce ? 0.2 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {children}
-          </m.div>
-        )}
-      </AnimatePresence>
-    </LazyMotion>
+    <Suspense fallback={null}>
+      <FabRevealMotion {...props} />
+    </Suspense>
   )
 }
