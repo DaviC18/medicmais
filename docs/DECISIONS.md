@@ -61,3 +61,48 @@ Os tipos de CONTRACTS §3 foram mantidos sem alteração. Foram **acrescentados*
 - A headline atual ("Transforme seu Sorriso...") soa como promessa de resultado. O hero usa "Cuidado odontológico para você e toda a sua família", marcado com `TODO(conteudo)` para validação.
 - O FAQ não traz preços nem promessas. Implante e prótese aparecem sempre "após avaliação". Convênio fica sem lista, com encaminhamento ao WhatsApp.
 - Depoimentos: os 3 do site entram como resumo (`name: 'Paciente'`, `source: 'site'`), marcados com TODO para trocar por avaliações reais do Google.
+
+## 2026-11-17 · 04-qa-launch
+
+### D10 · Domínio placeholder
+Domínio final pendente (CONTENT.md). Placeholder único `https://odonto.medicmaisbarramansa.com.br`, usado em `index.html`, `public/robots.txt` e `public/sitemap.xml`, marcado com `TODO(conteudo)`. Troca: `grep -rl "odonto.medicmaisbarramansa.com.br" index.html public`.
+
+### D11 · GTM condicionado a env var
+O loader do GTM é um script inline no `<head>` com `%VITE_GTM_ID%` (substituição nativa do Vite no HTML, sem mexer no `vite.config.ts`). Só carrega `gtm.js` se o valor casar `^GTM-[A-Z0-9]+$`; caso contrário não há request. `.env` versionado traz `VITE_GTM_ID=` vazio (evita o warning de variável indefinida no build); a Vercel define o valor real. `window.dataLayer` é sempre criado, então `trackWhatsApp()` funciona sem GTM. O `<noscript>` do GTM foi omitido: a página é um SPA que não funciona sem JS, e o iframe com ID ausente faria um request inválido.
+
+### D12 · JSON-LD estático
+`Dentist` estático em `index.html`, espelhando `clinica.ts` (pedido de plugin no HANDOFF). Responsável técnica como `employee` (`Person` + `identifier` `CRO-RJ 42247`), `taxID` = CNPJ, `contactPoint` com o WhatsApp. Sem `openingHours` e `geo` até haver dado real.
+
+### D13 · Cache e segurança (vercel.json)
+`/assets/*` (hasheado): `max-age=31536000, immutable`. HTML e demais rotas: `max-age=0, must-revalidate`. Estáticos não hasheados (`/brand`, `/images`, favicons, og-image): 7 dias + `stale-while-revalidate`. Headers: nosniff, `X-Frame-Options: DENY`, Referrer-Policy, Permissions-Policy, HSTS. CSP adiada até fechar os tags do GTM.
+
+### D14 · OG image
+`public/og-image.jpg` 1200×630 (55 KB), gerada com Pillow a partir de `public/brand/medicmais-logo-512.png`, usando Fraunces (opsz) e Geist dos `@fontsource-variable` locais e as cores dos tokens: painel com o símbolo à esquerda, "Odontologia · Barra Mansa (RJ)", nome, slogan e "Agende sua avaliação pelo WhatsApp".
+
+## 2026-11-17 · 03-motion
+
+### D15 · GSAP centralizado e reduced motion
+`src/lib/gsap.ts` registra ScrollTrigger, SplitText e `useGSAP` uma vez e define defaults `power3.out` / 0.8s. Todo efeito GSAP fica dentro de `gsap.matchMedia()` com `(prefers-reduced-motion: no-preference)`. O parallax também exige `(min-width: 768px)`. O estado "escondido" vem só do JS, via `gsap.from` no useLayoutEffect do `useGSAP`, antes do paint. O HTML/CSS sempre traz o estado final, então nada some se o JS falhar ou se o usuário pediu menos movimento. Só transform/opacity.
+
+### D16 · Hero sem atrasar o LCP
+`hero-media` não recebe opacity, só `scale 1.04→1`. Assim a imagem pinta no primeiro frame. O h1 é dividido em palavras com SplitText e revertido para texto puro ao fim. A timeline dura cerca de 1.4s.
+
+### D17 · Motion enxuto (LazyMotion)
+Os componentes de `src/components/motion/` usam `LazyMotion` + `m` + `domAnimation`, e não `motion.*`. Medido num bundle isolado (React + GSAP + ST + SplitText + Motion): 177 KB → 162 KB gzip. Fica proibido `motion.*` direto nas seções. Microinteração nova deve virar componente em `src/components/motion/`.
+
+### D18 · Lenis: não usar
+Ficou de fora. O scroll nativo já é suave o bastante para uma landing de conteúdo. Lenis acrescenta ~4 KB gzip e um rAF permanente no main thread, o que piora o INP em celular médio. Também exige sincronia com `ScrollTrigger.update` e quebra o `scroll-behavior` nativo das âncoras e o comportamento de reduced motion. Revisitar só se o 02 pedir scroll "amanteigado" e o Lighthouse/INP tiver folga.
+
+## 2026-11-17 · 02-sections
+
+### D-S1 · Composição das seções
+- Layouts assimétricos em 12 colunas. Em Serviços e FAQ, o título fica fixo (sticky) à esquerda. Os cards de serviço ficam em colunas desencontradas (`even:mt-14`). Diferenciais e depoimentos usam lista editorial com filetes, sem grade de cards. Os depoimentos formam o momento tipográfico da página: serifa grande e sem cards. O CTA final fica num painel navy.
+- Sem eyebrow acima dos títulos (o craft-floor do impeccable proíbe). O token `text-eyebrow` não é usado.
+- Um único estilo de botão: pílula. Vermelho da marca para o WhatsApp, contorno navy para ação secundária, `min-h-12`/`min-h-14` (alvo de toque). O FAB mantém o verde do WhatsApp com `whatsapp-ink`.
+- Ícone do WhatsApp: SVG próprio (path do Simple Icons). O lucide 1.x não tem ícones de marca. O do Instagram também é um SVG próprio.
+
+### D-S2 · React Bits: nenhum componente instalado
+O texto do hero já é animado pelo `useHeroIntro`, e o contrato do 03 proíbe React Bits em `hero-title`. O `data-anim="count"` substitui o CountUp. Um marquee com 3 resumos curtos seria ruído. Por isso o registry não foi adicionado ao `components.json`, e a exceção autorizada pelo coordenador ficou sem uso.
+
+### D-S3 · Textos de UI temporários
+Os títulos de seção e os rótulos de acessibilidade que não existem em `clinica.ts` ficam em `src/sections/_pending-copy.ts`, até o 01 movê-los para `clinica.ui` (pedido no HANDOFF). A regra "nada de texto hardcoded nos componentes" continua valendo, porque nenhum JSX tem string literal.
